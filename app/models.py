@@ -6,6 +6,7 @@ from passlib.hash import bcrypt
 from py2neo import Graph, Node, Relationship, authenticate
 
 from app.common.timestamp import Timestamp
+from app.common.spotify_utils import get_spotify_api
 
 def get_db_url():
 	hostport = os.environ.get('NEO4J_HOSTPORT')
@@ -19,6 +20,7 @@ def get_graph():
 	return Graph(get_db_url())
 
 graph = get_graph()
+spotify = get_spotify_api()
 
 class User:
 	def __init__(self, username):
@@ -61,10 +63,14 @@ class User:
 		track = Track(**kwargs).find()
 		rel = Relationship(user, "Liked", track,
 			timestamp=Timestamp().get_as_epoch())
-		graph.create(rel)
+		graph.create_unique(rel)
 
 
 class Track:
+	"""
+	id: unique identifier string (automatically generated)
+	spotify_uri: unique
+	"""
 	def __init__(self, _id=None, spotify_uri=None):
 		if not spotify_uri and not _id:
 			raise Exception("Must provide either an _id or a spotify_uri to instantiate a track object")
@@ -80,13 +86,23 @@ class Track:
 				"spotify_uri", self.spotify_uri)
 		return track
 
-	def create_from_spotify_uri(self):
+	def create(self, **kwargs):
 		track = Node("Track",
-			_id=str(uuid.uuid4()), 
-			spotify_uri=self.spotify_uri)
-		track = graph.create(track)[0]
+			_id=str(uuid.uuid4()),
+			**kwargs)
+		track, = graph.create(track)
 		return track
-		
+
+	def create_from_spotify_uri(self, **kwargs):
+		track = self.create(
+			spotify_uri=self.spotify_uri,
+			**kwargs)
+		return track
+
+	def lookup_track_by_spotify_uri(self, uri):
+		return spotify.get_track_by_spotify_uri(uri)
+
+
 
 	@staticmethod
 	def get_all_tracks():

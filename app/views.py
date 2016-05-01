@@ -84,6 +84,7 @@ def profile(username):
 		username=username,
 		tracks=tracks)
 
+
 @app.route('/logout', methods=['GET'])
 def logout():
 	session.pop('username', None)

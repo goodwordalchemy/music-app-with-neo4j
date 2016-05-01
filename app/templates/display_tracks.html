@@ -1,8 +1,10 @@
 <ul class="tracks">
 	{% for row in tracks %}
 		<li>
-			<b>{{ row.track.spotify_uri }}</b>
-			<a href="{{ url_for('like_track', track_id=row.track['_id']) }}">like</a>
+			<b>{{ row.track['_id'] }}</b>
+			{% if session.username and username != session.username %}
+				<a href="{{ url_for('like_track', track_id=row.track['_id']) }}">like</a>
+			{% endif %}
 			<br>
 		</li>
 	{% else %}

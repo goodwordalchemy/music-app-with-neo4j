@@ -1,5 +1,5 @@
 from app import app
 import os
 
-app.secret_key = os.urandom(24)
+app.config.from_object('config.Config')
 app.run(debug=True)
