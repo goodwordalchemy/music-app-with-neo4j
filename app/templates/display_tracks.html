@@ -1,0 +1,11 @@
+<ul class="tracks">
+	{% for row in tracks %}
+		<li>
+			<b>{{ row.track.spotify_uri }}</b>
+			<a href="{{ url_for('like_track', track_id=row.track['_id']) }}">like</a>
+			<br>
+		</li>
+	{% else %}
+		<li>There aren't any tracks yet!</li>
+	{% endfor %}
+</ul>
