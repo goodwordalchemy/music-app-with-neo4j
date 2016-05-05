@@ -3,9 +3,11 @@ from flask import Flask, request, session, redirect
 from flask import url_for, render_template, flash
 
 app = Flask(__name__)
+app.config.from_object('config.Config')
 
 @app.route('/')
 def index():
+	"""shows all tracks"""
 	tracks = Track.get_all_tracks()
 	return render_template('index.html', tracks=tracks)
 
@@ -55,7 +57,11 @@ def search_track():
 	track_obj = Track(spotify_uri=spotify_uri)
 	track = track_obj.find()
 	if not track:
-		track = track_obj.create_from_spotify_uri()
+		track_info = track_obj.lookup_track_by_spotify_uri()
+		if not track_info:
+			flash("could not find a track with that id")
+			return redirect(url_for('index'))
+		track = track_obj.create(**track_info)
 	return redirect(url_for('like_track', track_id=track['_id']))
 	
 
@@ -67,8 +73,11 @@ def like_track(track_id):
 		flash('You must be logged in to like a post.')
 		return redirect(url_for('login'))
 
-	User(username).like_track(_id=track_id)
-	flash("Liked track.")
+	tf_liked_track = User(username).like_track(uuid=track_id)
+	if tf_liked_track:
+		flash("Liked track.")
+	else:
+		flash("Cannot like track that you already like")
 	return redirect(request.referrer)
 
 @app.route('/profile/<username>')
@@ -84,9 +93,18 @@ def profile(username):
 		username=username,
 		tracks=tracks)
 
+@app.route('/track/<track_id>')
+def track(track_id):
+	"""
+	this page will show all of the like events for a track.
+	"""
+	pass
+
+
 
 @app.route('/logout', methods=['GET'])
 def logout():
 	session.pop('username', None)
 	flash("Logged out.")
 	return redirect(url_for('index'))
+
