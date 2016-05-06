@@ -1,11 +1,13 @@
 <ul class="like_events">
 	{% for like in like_events %}
 		<li>
-			<div>user: {{ like.username }}</div>
-			<b>{{ like.entity_name }}</b> 
+			<a href="{{ url_for('profile', username=like.username) }}">
+				<div>user: {{ like.username }}</div></a>
+			<a href="{{ url_for('track', track_uuid=like.entity_uuid) }}">
+			<b>{{ like.entity_name }}</b></a>
 			<div>on: {{ like.timestamp }}</div>
 			{% if like.show_like_button  %}
-				<a href="{{ url_for('like_track', track_id=like.entity_uuid) }}">like</a>
+				<a href="{{ url_for('like_track', track_uuid=like.entity_uuid) }}">like</a>
 			{% endif %}
 		</li>
 		<br>
