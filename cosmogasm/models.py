@@ -5,8 +5,8 @@ import uuid
 from passlib.hash import bcrypt
 from py2neo import Graph, Node, Relationship, authenticate
 
-from app.common.timestamp import Timestamp
-from app.common.spotify_utils import get_spotify_api, SpotifyInvalidRequestError
+from cosmogasm.common.timestamp import Timestamp
+from cosmogasm.common.spotify_utils import get_spotify_api, SpotifyInvalidRequestError
 
 def get_db_url():
 	hostport = os.environ.get('NEO4J_HOSTPORT')

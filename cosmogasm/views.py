@@ -1,8 +1,8 @@
 from flask import Flask, request, session, redirect
 from flask import url_for, render_template, flash
 
-from app.models import User, Track, Liked
-from app.common.timestamp import Timestamp
+from cosmogasm.models import User, Track, Liked
+from cosmogasm.common.timestamp import Timestamp
 
 app = Flask(__name__)
 app.config.from_object('config.Config')

@@ -2,3 +2,4 @@ environment.sh
 config.py
 *.pickle
 *.pyc
+py2neo_dev/

@@ -1,4 +1,4 @@
-from app import app
+from cosmogasm import app
 import os
 
 app.run(debug=True)
