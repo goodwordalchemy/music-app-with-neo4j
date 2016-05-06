@@ -24,6 +24,32 @@ def index():
 
 	return render_template('index.html', like_events=like_events)
 
+@app.route('/profile/<username>')
+def profile(username):
+	logged_in_username = session.get('username') # in case we want special logic for editing a profile etc.
+	user_being_viewed_username = username
+	user_being_viewed = User(user_being_viewed_username)
+
+	like_events = user_being_viewed.get_all_like_events(show_like_button=_show_like_button)
+	
+	return render_template(
+		'profile.html',
+		username=username,
+		like_events=like_events)
+
+@app.route('/track/<track_uuid>')
+def track(track_uuid):
+	"""
+	this page will show all of the like events for a track.
+	"""
+	track = Track(uuid=track_uuid)
+	db_track = track.find()
+	like_events = track.get_all_like_events(show_like_button=lambda _: False)
+	return render_template(
+		'track.html',
+		name=db_track['name'],
+		like_events=like_events)
+
 
 @app.route('/register', methods=['GET','POST'])
 def register():
@@ -92,29 +118,6 @@ def like_track(track_id):
 	else:
 		flash("Cannot like track that you already like")
 	return redirect(request.referrer)
-
-@app.route('/profile/<username>')
-def profile(username):
-	logged_in_username = session.get('username') # in case we want special logic for editing a profile etc.
-	user_being_viewed_username = username
-	user_being_viewed = User(user_being_viewed_username)
-
-	like_events = Liked.get_all_like_events(show_like_button=_show_like_button)
-	
-	tracks = user_being_viewed.get_liked_tracks()
-
-	return render_template(
-		'profile.html',
-		username=username,
-		tracks=tracks)
-
-@app.route('/track/<track_id>')
-def track(track_id):
-	"""
-	this page will show all of the like events for a track.
-	"""
-	pass
-
 
 
 @app.route('/logout', methods=['GET'])

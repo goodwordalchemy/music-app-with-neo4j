@@ -24,7 +24,6 @@ spotify = get_spotify_api()
 
 class User:
 	def __init__(self, username):
-		self.uuid = str(uuid.uuid4()),
 		self.username = username
 
 	def find(self):
@@ -49,12 +48,13 @@ class User:
 		else:
 			return False
 
-	def get_like_events(self, **kwargs):
+	def get_all_like_events(self, **kwargs):
 		query = """
-		match (user:)-[like_event:Liked]->(entity)
+		match (user)-[like_event:Liked]->(entity)
+		where user.username = "{}"
 		return user, like_event, entity;
-		"""
-		Track.run_like_events_query(query, **kwargs)
+		""".format(self.username)
+		return Liked.run_like_events_query(query, **kwargs)
 
 
 	def get_liked_tracks(self):
@@ -153,6 +153,14 @@ class Track:
 			)
 		track, = graph.create(track)
 		return track
+
+	def get_all_like_events(self, **kwargs):
+		query = """
+		match (user)-[like_event:Liked]->(entity)
+		where entity.uuid = "{}"
+		return user, like_event, entity;
+		""".format(self.uuid)
+		return Liked.run_like_events_query(query, **kwargs)
 
 	def lookup_track_by_spotify_uri(self):
 		try:
