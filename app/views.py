@@ -1,15 +1,28 @@
-from .models import User, Track
 from flask import Flask, request, session, redirect
 from flask import url_for, render_template, flash
+
+from app.models import User, Track, Liked
+from app.common.timestamp import Timestamp
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
 
+def _show_like_button(le):
+	session_username = session.get('username')
+	if not session_username:
+		return False
+	like_event_username = le['user']['username']
+	tf_show_like_button = like_event_username != session_username
+	tf_show_like_button &= session_username != like_event_username
+	return tf_show_like_button
+
 @app.route('/')
 def index():
-	"""shows all tracks"""
-	tracks = Track.get_all_tracks()
-	return render_template('index.html', tracks=tracks)
+	"""shows all like_events"""
+	like_events = Liked.get_all_like_events(show_like_button=_show_like_button)
+	print like_events
+
+	return render_template('index.html', like_events=like_events)
 
 
 @app.route('/register', methods=['GET','POST'])
@@ -62,7 +75,7 @@ def search_track():
 			flash("could not find a track with that id")
 			return redirect(url_for('index'))
 		track = track_obj.create(**track_info)
-	return redirect(url_for('like_track', track_id=track['_id']))
+	return redirect(url_for('like_track', track_id=track['uuid']))
 	
 
 @app.route('/like_track/<track_id>')
@@ -82,10 +95,12 @@ def like_track(track_id):
 
 @app.route('/profile/<username>')
 def profile(username):
-	logged_in_username = session.get('username')
+	logged_in_username = session.get('username') # in case we want special logic for editing a profile etc.
 	user_being_viewed_username = username
-
 	user_being_viewed = User(user_being_viewed_username)
+
+	like_events = Liked.get_all_like_events(show_like_button=_show_like_button)
+	
 	tracks = user_being_viewed.get_liked_tracks()
 
 	return render_template(

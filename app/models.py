@@ -49,6 +49,14 @@ class User:
 		else:
 			return False
 
+	def get_like_events(self, **kwargs):
+		query = """
+		match (user:)-[like_event:Liked]->(entity)
+		return user, like_event, entity;
+		"""
+		Track.run_like_events_query(query, **kwargs)
+
+
 	def get_liked_tracks(self):
 		user = self.find()
 		query = """
@@ -56,25 +64,63 @@ class User:
 		WHERE user.username = {username}
 		RETURN track
 		"""
-		return graph.cypher.execute(query, username=user['username'])
+		return graph.run(query, username=user['username'])
 
 	def like_track(self, **kwargs):
 		"""kwargs in this case would be either a spotify_id or track._id"""
 		user = self.find()
 		track = Track(**kwargs)
 		rel = Relationship(user, "Liked", track.find())
-		result = graph.cypher.execute("""
-			match (n)-[r:Liked]->(p) 
-			where p.uuid = {track_uuid} 
-			and n.username={username} return n,r,p;""", 
-			username=self.username,
-			track_uuid=track.uuid)
-		if len(result):
+		if graph.exists(rel):
 			return False
 		else:
-			graph.create_unique(rel)
+			rel['timestamp'] = Timestamp().as_epoch()
+			graph.create(rel)
 			return True
-		
+
+class Liked(Relationship):
+	def __init__(self, start_node, end_node):
+		super(Liked, self).__init__(
+			self, 
+			start_node, 
+			self.__class__.__name__,
+			end_node)
+
+	@classmethod
+	def like_event_to_dict_func(cls, **kwargs):
+		"""
+		kwargs should be of the form :
+
+			{key: func that takes le as argument}
+
+		"""
+		def _make_dict(le):
+			thedict = dict(
+				username=le['user']['username'],
+				entity_name=le['entity']['name'],
+				# album=
+				# artists=
+				timestamp=Timestamp(le['like_event']['timestamp']).as_str(),
+				entity_uuid=le['entity']['uuid'])
+			for kw, func in kwargs.iteritems():
+				thedict.update({kw:func(le)})
+			return thedict
+		return _make_dict
+
+	@classmethod
+	def get_all_like_events(cls, **kwargs):
+		query = """
+		match (user)-[like_event:Liked]->(entity)
+		return user, like_event, entity;
+		"""
+		return cls.run_like_events_query(query, **kwargs)
+
+	@classmethod
+	def run_like_events_query(cls, query, **kwargs):
+		to_like_event = cls.like_event_to_dict_func(**kwargs)
+		like_events = graph.run(query)
+		like_events = [to_like_event(le) for le in like_events]
+		return like_events
 
 
 class Track:
@@ -101,7 +147,10 @@ class Track:
 		track = Node("Track",
 			uuid=str(uuid.uuid4()),
 			spotify_uri=kwargs['spotify_uri'],
-			name=kwargs['name'])
+			name=kwargs['name'],
+			# album=kwargs['album'],
+			# artists=kwargs['artists']
+			)
 		track, = graph.create(track)
 		return track
 
@@ -114,7 +163,7 @@ class Track:
 	@staticmethod
 	def get_all_tracks():
 		query = """
-		MATCH (track:Track)
-		RETURN track
+		match (user)-[like_event:Liked]->(entity)
+		return user, like_event, entity;
 		"""
-		return graph.cypher.execute(query)
+		return graph.run(query)
