@@ -101,18 +101,18 @@ def search_track():
 			flash("could not find a track with that id")
 			return redirect(url_for('index'))
 		track = track_obj.create(**track_info)
-	return redirect(url_for('like_track', track_id=track['uuid']))
+	return redirect(url_for('like_track', track_uuid=track['uuid']))
 	
 
-@app.route('/like_track/<track_id>')
-def like_track(track_id):
+@app.route('/like_track/<track_uuid>')
+def like_track(track_uuid):
 	username = session.get('username')
 
 	if not username:
 		flash('You must be logged in to like a post.')
 		return redirect(url_for('login'))
 
-	tf_liked_track = User(username).like_track(uuid=track_id)
+	tf_liked_track = User(username).like_track(uuid=track_uuid)
 	if tf_liked_track:
 		flash("Liked track.")
 	else:

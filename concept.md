@@ -12,6 +12,7 @@ There is an unprecedented amount of music available to the modern listener, and 
 
 4.) the user's profile shows links to all of the songs that that user has liked.
 
+
 ###Later Versions:
 -corresponding links to the artist page and the album page, which will be a lot like the track page.
 -bootstrap and better look to UI
@@ -19,3 +20,6 @@ There is an unprecedented amount of music available to the modern listener, and 
 -artist and album pages.
 -ability to gracefully unlike a track.
 -ability to comment on other people's like event.
+
+
+

@@ -22,6 +22,14 @@ def get_graph():
 graph = get_graph()
 spotify = get_spotify_api()
 
+def relationship_exists(rel):
+	result = len(list(graph.match(
+		start_node=rel.start_node(), 
+		end_node=rel.end_node(),
+		rel_type=rel.type())))
+	print "relationship exists: ", result
+	return result
+
 class User:
 	def __init__(self, username):
 		self.username = username
@@ -70,17 +78,21 @@ class User:
 		"""kwargs in this case would be either a spotify_id or track._id"""
 		user = self.find()
 		track = Track(**kwargs)
-		rel = Relationship(user, "Liked", track.find())
-		if graph.exists(rel):
+		rel = Liked(user, track.find())
+		
+		if relationship_exists(rel):
 			return False
 		else:
 			rel['timestamp'] = Timestamp().as_epoch()
-			graph.create(rel)
+			tx = graph.begin()
+			tx.create(rel)
+			tx.commit()
 			return True
 
 class Liked(Relationship):
+
 	def __init__(self, start_node, end_node):
-		super(Liked, self).__init__(
+		Relationship.__init__(
 			self, 
 			start_node, 
 			self.__class__.__name__,
@@ -144,14 +156,33 @@ class Track:
 		return track
 
 	def create(self, **kwargs):
+		tx = graph.begin()
+
 		track = Node("Track",
 			uuid=str(uuid.uuid4()),
 			spotify_uri=kwargs['spotify_uri'],
-			name=kwargs['name'],
-			# album=kwargs['album'],
-			# artists=kwargs['artists']
-			)
-		track, = graph.create(track)
+			name=kwargs['name'])
+		tx.create(track)
+
+		artists = kwargs['artists']
+		artists = [Artist(**artists[i]) for i in range(len(artists))]
+		for a in artists:
+			tx.create(a)
+
+		track_performed_by = [PerformedBy(track, a) for a in artists]
+		for tpb in track_performed_by:
+			tx.create(tpb)
+
+		album = Album(**kwargs['album'])
+		tx.create(album)
+		appears_on = AppearsOn(track, album)
+		tx.create(appears_on)
+		album_performed_by = [PerformedBy(album, a) for a in artists]
+		for apb in album_performed_by:
+			tx.create(apb)
+		
+		tx.commit()
+
 		return track
 
 	def get_all_like_events(self, **kwargs):
@@ -175,3 +206,33 @@ class Track:
 		return user, like_event, entity;
 		"""
 		return graph.run(query)
+
+class Artist(Node):
+	def __init__(self, *otherlabels, **kwargs):
+		Node.__init__(self, 
+			self.__class__.__name__, 
+			*otherlabels, **kwargs)
+
+
+
+class Album(Node):
+	def __init__(self, *otherlabels, **kwargs):
+		Node.__init__(self, 
+			self.__class__.__name__, 
+			*otherlabels, **kwargs)
+
+class AppearsOn(Relationship):
+	def __init__(self, start_node, end_node):
+		Relationship.__init__(
+			self, 
+			start_node, 
+			self.__class__.__name__,
+			end_node)
+
+class PerformedBy(Relationship):
+	def __init__(self, start_node, end_node):
+		Relationship.__init__(
+			self, 
+			start_node, 
+			self.__class__.__name__,
+			end_node)
