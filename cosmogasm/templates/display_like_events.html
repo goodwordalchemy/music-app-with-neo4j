@@ -5,6 +5,14 @@
 				<div>user: {{ like.username }}</div></a>
 			<a href="{{ url_for('track', track_uuid=like.entity_uuid) }}">
 			<b>{{ like.entity_name }}</b></a>
+			<div>by: 
+				{% for art in like.artists %} 
+					{{art['name'] }}, 
+				{% endfor %}
+			</div>
+			<div>on album:
+				{{ like['album']['name'] }}
+			</div>
 			<div>on: {{ like.timestamp }}</div>
 			{% if like.show_like_button  %}
 				<a href="{{ url_for('like_track', track_uuid=like.entity_uuid) }}">like</a>

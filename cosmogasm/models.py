@@ -60,7 +60,10 @@ class User:
 		query = """
 		match (user)-[like_event:Liked]->(entity)
 		where user.username = "{}"
-		return user, like_event, entity;
+		optional match (entity)-[:AppearsOn]->(album)
+		optional match (entity)-[:PerformedBy]->(artists)
+		
+		return user, like_event, entity, album, collect(artists) as artists;
 		""".format(self.username)
 		return Liked.run_like_events_query(query, **kwargs)
 
@@ -110,8 +113,8 @@ class Liked(Relationship):
 			thedict = dict(
 				username=le['user']['username'],
 				entity_name=le['entity']['name'],
-				# album=
-				# artists=
+				album=le['album'],
+				artists=le['artists'],
 				timestamp=Timestamp(le['like_event']['timestamp']).as_str(),
 				entity_uuid=le['entity']['uuid'])
 			for kw, func in kwargs.iteritems():
@@ -123,7 +126,9 @@ class Liked(Relationship):
 	def get_all_like_events(cls, **kwargs):
 		query = """
 		match (user)-[like_event:Liked]->(entity)
-		return user, like_event, entity;
+		optional match (entity)-[:AppearsOn]->(album)
+		optional match (entity)-[:PerformedBy]->(artists)
+		return user, like_event, entity, album, collect(artists) as artists;
 		"""
 		return cls.run_like_events_query(query, **kwargs)
 
@@ -189,7 +194,10 @@ class Track:
 		query = """
 		match (user)-[like_event:Liked]->(entity)
 		where entity.uuid = "{}"
-		return user, like_event, entity;
+		optional match (entity)-[:AppearsOn]->(album)
+		optional match (entity)-[:PerformedBy]->(artists)
+		
+		return user, like_event, entity, album, collect(artists) as artists;
 		""".format(self.uuid)
 		return Liked.run_like_events_query(query, **kwargs)
 
