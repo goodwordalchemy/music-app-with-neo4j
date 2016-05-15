@@ -171,20 +171,22 @@ class Track:
 
 		artists = kwargs['artists']
 		artists = [Artist(**artists[i]) for i in range(len(artists))]
+		artists = [a.find() or a for a in artists]
+
 		for a in artists:
-			tx.create(a)
+			tx.merge(a)
 
 		track_performed_by = [PerformedBy(track, a) for a in artists]
 		for tpb in track_performed_by:
-			tx.create(tpb)
+			tx.merge(tpb)
 
 		album = Album(**kwargs['album'])
-		tx.create(album)
+		tx.merge(album)
 		appears_on = AppearsOn(track, album)
-		tx.create(appears_on)
+		tx.merge(appears_on)
 		album_performed_by = [PerformedBy(album, a) for a in artists]
 		for apb in album_performed_by:
-			tx.create(apb)
+			tx.merge(apb)
 		
 		tx.commit()
 
@@ -220,6 +222,28 @@ class Artist(Node):
 		Node.__init__(self, 
 			self.__class__.__name__, 
 			*otherlabels, **kwargs)
+		if not 'uuid' in kwargs.keys():
+			self['uuid'] = str(uuid.uuid4())
+	
+	def find(self):
+		artist = None
+		if self['uuid']:
+			artist = graph.find_one("Artist", 
+				"uuid", self['uuid'])
+		elif self['spotify_uri']:
+			artist = graph.find_one("Artist", 
+				"spotify_uri", self.spotify_uri)
+		return artist
+
+	def get_all_like_events(self, **kwargs):
+		query = """
+		match (user)-[like_event:Liked]->(entity)
+		optional match (entity)-[:AppearsOn]->(album)
+		optional match (entity)-[:PerformedBy]->(artist)
+		where artist.uuid = "{}"
+		return user, like_event, entity, album, collect(artist) as artists;
+		""".format(self['uuid'])
+		return Liked.run_like_events_query(query, **kwargs)
 
 
 
@@ -228,6 +252,28 @@ class Album(Node):
 		Node.__init__(self, 
 			self.__class__.__name__, 
 			*otherlabels, **kwargs)
+		if 'uuid' not in kwargs.keys():
+			self['uuid']=str(uuid.uuid4())
+
+	def find(self):
+		album = None
+		if self['uuid']:
+			album = graph.find_one("Album", 
+				"uuid", self['uuid'])
+		elif self['spotify_uri']:
+			album = graph.find_one("Album", 
+				"spotify_uri", self.spotify_uri)
+		return album
+
+	def get_all_like_events(self, **kwargs):
+		query = """
+		match (user)-[like_event:Liked]->(entity)
+		optional match (entity)-[:AppearsOn]->(album)
+		optional match (entity)-[:PerformedBy]->(artist)
+		where album.uuid = "{}"
+		return user, like_event, entity, album, collect(artist) as artists;
+		""".format(self['uuid'])
+		return Liked.run_like_events_query(query, **kwargs)
 
 class AppearsOn(Relationship):
 	def __init__(self, start_node, end_node):

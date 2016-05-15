@@ -1,7 +1,7 @@
 from flask import Flask, request, session, redirect
 from flask import url_for, render_template, flash
 
-from cosmogasm.models import User, Track, Liked
+from cosmogasm.models import User, Track, Liked, Artist, Album
 from cosmogasm.common.timestamp import Timestamp
 
 app = Flask(__name__)
@@ -50,6 +50,25 @@ def track(track_uuid):
 		name=db_track['name'],
 		like_events=like_events)
 
+@app.route('/artist/<artist_uuid>')
+def artist(artist_uuid):
+	artist = Artist(uuid=artist_uuid)
+	db_artist = artist.find()
+	like_events = artist.get_all_like_events(show_like_button= lambda _: False)
+	return render_template(
+		'artist.html',
+		name=db_artist['name'],
+		like_events=like_events)
+
+@app.route('/album/<album_uuid>')
+def album(album_uuid):
+	album = Album(uuid=album_uuid)
+	db_album = album.find()
+	like_events = album.get_all_like_events(show_like_button= lambda _: False)
+	return render_template(
+		'album.html',
+		name=db_album['name'],
+		like_events=like_events)
 
 @app.route('/register', methods=['GET','POST'])
 def register():

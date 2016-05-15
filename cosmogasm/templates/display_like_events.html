@@ -7,11 +7,11 @@
 			<b>{{ like.entity_name }}</b></a>
 			<div>by: 
 				{% for art in like.artists %} 
-					{{art['name'] }}, 
+					<a href="{{ url_for('artist', artist_uuid=art['uuid']) }}">{{art['name'] }}</a>, 
 				{% endfor %}
 			</div>
 			<div>on album:
-				{{ like['album']['name'] }}
+				<a href="{{ url_for('album', album_uuid=like['album']['uuid']) }}">{{ like['album']['name'] }}</a>
 			</div>
 			<div>on: {{ like.timestamp }}</div>
 			{% if like.show_like_button  %}
