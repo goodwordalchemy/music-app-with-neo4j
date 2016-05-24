@@ -1,14 +1,14 @@
-To run local dev server on OSX:
+###To run local dev server on OSX:
 
-1.) Make sure you have docker intalled.  If you don't know what docker is, just do the [tutorial on the site](https://docs.docker.com/mac/).  That will be more than enough to get you up and running with this dev environment.  In a word, docker is used here so that it is super easy for you to get a dev server up and running.
+1.) Make sure you have docker installed.  If you don't know what docker is, just do the [tutorial on the docker website](https://docs.docker.com/mac/)--paying particular attention to the "installation" section.  That will be more than enough to get you up and running with this dev environment.  In a word, docker is used here so that it is super easy for you to get a dev server up and running.
 
-1.) a.) make sure your docker machine is started (osx).  `$ docker-machine start`.
+1.) a.) Make sure your docker machine is started (osx).  `$ docker-machine start`.
 
-2.) Setup your spotify credentials.  Follow the instructions in the [user guide for the spotify api](https://developer.spotify.com/web-api/tutorial/).  Particularly up to the heading "Getting the Client ID and Secret Key."  For the redirect uri, you should use `http://localhost:5000/callback/spotify`, but it doesn't actually matter
+2.) Setup your spotify credentials.  Follow the instructions in the [user guide for the spotify api](https://developer.spotify.com/web-api/tutorial/).  In particular, read up to the heading "Getting the Client ID and Secret Key."  For the redirect uri, you should use `http://localhost:5000/callback/spotify`, but it doesn't actually matter at this point.
 
-3.) get the ip address for your docker machine.  Just run `docker-machine ip` and the ip will be printed.
+3.) Get the ip address for your docker machine.  Just run `docker-machine ip` and the ip address will be printed.
 
-4.) set up your environment file.  make a file called `.env`.  (`touch .env`).  The contents of the file should look like this (where anything inside of angled braces (<>) is for you to replace as guided.:
+4.) Set up your environment file.  make a file called `.env`.  (`touch .env`).  The contents of the file should look like this (where anything inside of angled braces (<>) is for you to replace as guided):
 
 ```bash
 NEO4J_AUTH=neo4j:<password of your choosing>
