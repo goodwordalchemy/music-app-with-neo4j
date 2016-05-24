@@ -8,16 +8,11 @@ from py2neo import Graph, Node, Relationship, authenticate
 from cosmogasm.common.timestamp import Timestamp
 from cosmogasm.common.spotify_utils import get_spotify_api, SpotifyInvalidRequestError
 
-def get_db_url():
-	hostport = os.environ.get('NEO4J_HOSTPORT')
-	return "http://{hostport}/db/data/".format(hostport=hostport)
-
 def get_graph():
-	hostport = os.environ.get('NEO4J_HOSTPORT')
-	username = os.environ.get('NEO4J_USERNAME')
-	password = os.environ.get('NEO4J_PASSWORD')
-	authenticate(hostport, username, password)
-	return Graph(get_db_url())
+	user, password = os.environ.get('NEO4J_AUTH').split(":")
+	# url = os.environ.get('NEO4J_PORT_7474_TCP')
+	url = "http://192.168.99.100:7474"
+	return Graph(url, user=user, password=password)
 
 graph = get_graph()
 spotify = get_spotify_api()

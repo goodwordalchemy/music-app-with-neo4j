@@ -1,0 +1,21 @@
+web:
+    restart: always
+    build: .
+    ports: 
+        - "5000:5000"
+    volumes:
+        - .:/code
+    links:
+        - neo4j:neo4j
+    env_file: .env
+
+neo4j: 
+    restart: always
+    image: tpires/neo4j
+    ports:
+        - "7474:7474"
+    volumes:
+        - /opt/data
+    env_file: .env
+    cap_add:
+        - SYS_RESOURCE
